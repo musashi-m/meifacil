@@ -18,17 +18,17 @@
         </div>
         <div>
           <h1>Facilita MEI</h1>
-          <p>Emissor rápido de guias DAS</p>
+          <p>PGMEI & NFS-e Nacional</p>
         </div>
       </div>
-      <button id="btnOpenPgmei" class="btn-pgmei-direct" title="Abrir página oficial do PGMEI">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          <polyline points="15 3 21 3 21 9"></polyline>
-          <line x1="10" y1="14" x2="21" y2="3"></line>
-        </svg>
-        PGMEI
-      </button>
+      <div class="header-portals">
+        <button id="btnOpenPgmei" class="btn-portal-badge" title="Abrir portal do PGMEI (DAS)">
+          PGMEI
+        </button>
+        <button id="btnOpenNfse" class="btn-portal-badge nfse" title="Abrir Emissor da NFS-e Nacional">
+          NFS-e
+        </button>
+      </div>
     </header>
 
     <!-- Nav Tabs -->
@@ -107,6 +107,20 @@
         <div class="form-group">
           <label for="newPhone">WhatsApp do Cliente (opcional)</label>
           <input type="tel" id="newPhone" placeholder="(11) 99999-9999" maxlength="15">
+        </div>
+
+        <div class="form-group">
+          <label for="newNfsePassword">Senha do Portal NFS-e Nacional (opcional)</label>
+          <div class="input-with-button">
+            <input type="password" id="newNfsePassword" placeholder="Senha do Emissor Nacional">
+            <button type="button" id="btnToggleNfsePass" class="btn-secondary" title="Ver/Ocultar Senha">👁️</button>
+          </div>
+          <span class="field-hint">Preenche automaticamente o login no portal nfse.gov.br</span>
+        </div>
+
+        <div class="form-group">
+          <label for="newCpf">CPF do Titular (opcional)</label>
+          <input type="text" id="newCpf" placeholder="000.000.000-00" maxlength="14">
         </div>
 
         <div class="form-actions">

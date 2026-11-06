@@ -159,19 +159,41 @@ body {
   background: var(--primary);
   color: #ffffff;
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
   border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .btn-pgmei-header:hover {
   background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-nfse-header {
+  background: #1d4ed8;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.2);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-nfse-header:hover {
+  background: #1e40af;
   transform: translateY(-1px);
 }
 
@@ -1172,6 +1194,17 @@ textarea:focus {
 
 .guide-chip.pdf:hover {
   background: #d1fae5;
+}
+
+.guide-chip.nfse {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.guide-chip.nfse:hover {
+  background: #dbeafe;
 }
 
 

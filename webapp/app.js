@@ -2,6 +2,7 @@
 
 const STORAGE_KEY = 'facilita_mei_data';
 const PGMEI_URL = 'https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes/atspo/pgmei.app/identificacao';
+const NFSE_URL = 'https://www.nfse.gov.br/EmissorNacional/Login';
 
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -41,6 +42,10 @@ const inputName = document.getElementById('inputName');
 const inputRazao = document.getElementById('inputRazao');
 const inputPhone = document.getElementById('inputPhone');
 const inputNotes = document.getElementById('inputNotes');
+const inputNfsePassword = document.getElementById('inputNfsePassword');
+const inputCpf = document.getElementById('inputCpf');
+const inputNfseService = document.getElementById('inputNfseService');
+const btnToggleNfseWebPass = document.getElementById('btnToggleNfseWebPass');
 const apiStatusText = document.getElementById('apiStatusText');
 const btnBuscarBrasilApi = document.getElementById('btnBuscarBrasilApi');
 
@@ -173,6 +178,14 @@ function formatCnpj(val) {
   return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
 }
 
+function formatCpf(val) {
+  const digits = cleanDigits(val).slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
+}
+
 function formatPhone(val) {
   const digits = cleanDigits(val).slice(0, 11);
   if (digits.length <= 2) return digits;
@@ -283,7 +296,6 @@ function updateClientMonthGuideData(cnpj, { pix, barcode, hasFile, fileName }) {
     barcode: barcode !== undefined ? barcode : current.barcode,
     hasFile: hasFile !== undefined ? hasFile : current.hasFile,
     fileName: fileName !== undefined ? fileName : current.fileName,
-    // Se anexou informações da guia e ainda estava pendente, marca como emitida
     status: current.status === 'pending' ? 'emitted' : current.status
   };
   saveStorage();
@@ -349,7 +361,6 @@ async function sendWhatsApp(client) {
     message += `\n\n📎 O boleto em PDF segue em anexo.`;
   }
 
-  // 1. Tenta compartilhamento nativo com arquivo anexado no celular (Web Share API)
   if (attachedFileData && navigator.canShare) {
     try {
       const file = new File([attachedFileData.blob], attachedFileData.name, {
@@ -366,12 +377,11 @@ async function sendWhatsApp(client) {
         return;
       }
     } catch (err) {
-      if (err.name === 'AbortError') return; // Cancelado pelo usuário
+      if (err.name === 'AbortError') return;
       console.warn('Web Share falhou ou cancelado, fallback para wa.me', err);
     }
   }
 
-  // 2. Fallback: wa.me
   const cleanPhone = cleanDigits(client.phone);
   const encodedMsg = encodeURIComponent(message);
   const waUrl = cleanPhone.length >= 10
@@ -381,7 +391,6 @@ async function sendWhatsApp(client) {
   window.open(waUrl, '_blank');
 
   if (attachedFileData) {
-    // No PC, baixa o arquivo para você só arrastar para a janela do WhatsApp Web
     viewOrDownloadBlob(attachedFileData.blob, attachedFileData.name);
     showToast('✓ WhatsApp aberto e PDF baixado para você arrastar!');
   } else {
@@ -397,12 +406,10 @@ function renderCards() {
   const filtered = appData.clients.filter((client) => {
     const status = getClientMonthStatus(client.cnpj);
     
-    // Filtro por tab
     if (currentFilter !== 'all' && status !== currentFilter) {
       return false;
     }
 
-    // Filtro por texto
     if (q) {
       const matchName = (client.name || '').toLowerCase().includes(q);
       const matchRazao = (client.razao || '').toLowerCase().includes(q);
@@ -448,6 +455,7 @@ function renderCards() {
     const guideData = getClientMonthData(client.cnpj);
     const status = guideData.status;
     const formattedCnpj = formatCnpj(client.cnpj);
+    const hasNfse = Boolean(client.nfsePassword);
 
     const statusConfig = {
       pending: { label: 'Pendente', cssClass: 'status-pending' },
@@ -484,7 +492,7 @@ function renderCards() {
           </button>
         </div>
 
-        <!-- Seção de Dados da Guia (PDF, Pix, Código de Barras) -->
+        <!-- Seção de Dados da Guia e NFS-e -->
         <div class="card-guide-pills">
           ${guideData.hasFile ? `
             <button class="guide-chip pdf" data-action="view-pdf" data-cnpj="${client.cnpj}" title="Baixar / Visualizar PDF">
@@ -493,18 +501,33 @@ function renderCards() {
           ` : ''}
 
           ${guideData.pix ? `
-            <button class="guide-chip pix" data-action="copy-pix" data-pix="${escapeHtml(guideData.pix)}" title="Copiar Pix Copia e Cola">
+            <button class="guide-chip pix" data-action="copy-pix" title="Copiar Pix Copia e Cola">
               ⚡ Copiar Pix
             </button>
           ` : ''}
 
           ${guideData.barcode ? `
-            <button class="guide-chip barcode" data-action="copy-barcode" data-barcode="${escapeHtml(guideData.barcode)}" title="Copiar Código de Barras">
+            <button class="guide-chip barcode" data-action="copy-barcode" title="Copiar Código de Barras">
               📊 Copiar Cód. Barras
             </button>
           ` : ''}
 
-          <button class="guide-chip" data-action="open-guide" data-id="${client.id}" title="Anexar PDF da Guia ou Colar Pix / Código de Barras">
+          ${hasNfse ? `
+            <button class="guide-chip nfse" data-action="copy-nfse-pass" title="Copiar senha da NFS-e Nacional">
+              🔑 Senha NFS-e
+            </button>
+            <button class="guide-chip nfse" data-action="open-nfse-portal" title="Abrir Emissor da NFS-e Nacional">
+              🧾 NFS-e
+            </button>
+          ` : ''}
+
+          ${client.nfseService ? `
+            <button class="guide-chip" data-action="copy-nfse-service" title="Copiar texto do serviço padrão para a NFS-e">
+              📝 Serviço
+            </button>
+          ` : ''}
+
+          <button class="guide-chip" data-action="open-guide" title="Anexar PDF da Guia ou Colar Pix / Código de Barras">
             ${(guideData.hasFile || guideData.pix || guideData.barcode) ? '✏️ Alterar Guia' : '📎 Anexar Guia / Pix'}
           </button>
         </div>
@@ -521,17 +544,17 @@ function renderCards() {
         </button>
 
         <div class="sub-actions-row">
-          <button class="btn-action-sub whatsapp" data-action="whatsapp" data-id="${client.id}" title="Enviar dados e guia no WhatsApp">
+          <button class="btn-action-sub whatsapp" data-action="whatsapp" title="Enviar dados e guia no WhatsApp">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
             </svg>
             WhatsApp
           </button>
 
-          <button class="btn-action-sub" data-action="edit" data-id="${client.id}">
+          <button class="btn-action-sub" data-action="edit">
             Editar
           </button>
-          <button class="btn-action-sub delete" data-action="delete" data-id="${client.id}">
+          <button class="btn-action-sub delete" data-action="delete">
             Excluir
           </button>
         </div>
@@ -539,24 +562,20 @@ function renderCards() {
     `;
 
     // Eventos do Card
-    // Copiar CNPJ
     card.querySelector('[data-action="copy-cnpj"]').addEventListener('click', () => {
       navigator.clipboard.writeText(client.cnpj).then(() => {
         showToast('✓ CNPJ copiado para a área de transferência!');
       });
     });
 
-    // Toggle Status
     card.querySelector('[data-action="toggle-status"]').addEventListener('click', () => {
       toggleNextStatus(client.cnpj);
     });
 
-    // Abrir Modal de Guia / Pix
     card.querySelector('[data-action="open-guide"]').addEventListener('click', () => {
       openGuideModal(client);
     });
 
-    // Copiar Pix
     const btnPix = card.querySelector('[data-action="copy-pix"]');
     if (btnPix) {
       btnPix.addEventListener('click', () => {
@@ -566,12 +585,43 @@ function renderCards() {
       });
     }
 
-    // Copiar Código de Barras
     const btnBarcode = card.querySelector('[data-action="copy-barcode"]');
     if (btnBarcode) {
       btnBarcode.addEventListener('click', () => {
         navigator.clipboard.writeText(guideData.barcode).then(() => {
           showToast('✓ Código de barras copiado!');
+        });
+      });
+    }
+
+    // Copiar Senha NFS-e
+    const btnNfsePass = card.querySelector('[data-action="copy-nfse-pass"]');
+    if (btnNfsePass) {
+      btnNfsePass.addEventListener('click', () => {
+        navigator.clipboard.writeText(client.nfsePassword).then(() => {
+          showToast('✓ Senha da NFS-e copiada!');
+        });
+      });
+    }
+
+    // Abrir NFS-e
+    const btnOpenNfseCard = card.querySelector('[data-action="open-nfse-portal"]');
+    if (btnOpenNfseCard) {
+      btnOpenNfseCard.addEventListener('click', () => {
+        const toCopy = client.nfsePassword || client.cnpj;
+        navigator.clipboard.writeText(toCopy).then(() => {
+          showToast(client.nfsePassword ? '✓ Senha copiada! Abrindo NFS-e...' : '✓ CNPJ copiado! Abrindo NFS-e...');
+          window.open(NFSE_URL, '_blank');
+        });
+      });
+    }
+
+    // Copiar Serviço
+    const btnNfseService = card.querySelector('[data-action="copy-nfse-service"]');
+    if (btnNfseService) {
+      btnNfseService.addEventListener('click', () => {
+        navigator.clipboard.writeText(client.nfseService).then(() => {
+          showToast('✓ Descrição do serviço copiada!');
         });
       });
     }
@@ -592,7 +642,7 @@ function renderCards() {
       });
     }
 
-    // Emitir no PGMEI (Copia + Marca como emitida + Abre página)
+    // Emitir no PGMEI
     card.querySelector('.btn-emit-pgmei').addEventListener('click', () => {
       navigator.clipboard.writeText(client.cnpj).then(() => {
         if (getClientMonthStatus(client.cnpj) === 'pending') {
@@ -670,6 +720,9 @@ window.openAddModal = function () {
   modalClientTitle.textContent = 'Cadastrar Novo MEI';
   formClient.reset();
   clientIdInput.value = '';
+  if (inputNfsePassword) inputNfsePassword.value = '';
+  if (inputCpf) inputCpf.value = '';
+  if (inputNfseService) inputNfseService.value = '';
   apiStatusText.textContent = 'Digite os 14 dígitos para buscar os dados na Receita Federal.';
   apiStatusText.className = 'form-helper';
   modalClient.classList.remove('hidden');
@@ -684,6 +737,9 @@ function openEditModal(client) {
   inputRazao.value = client.razao || '';
   inputPhone.value = formatPhone(client.phone || '');
   inputNotes.value = client.notes || '';
+  if (inputNfsePassword) inputNfsePassword.value = client.nfsePassword || '';
+  if (inputCpf) inputCpf.value = formatCpf(client.cpf || '');
+  if (inputNfseService) inputNfseService.value = client.nfseService || '';
   apiStatusText.textContent = 'Edite as informações e clique em Salvar.';
   apiStatusText.className = 'form-helper';
   modalClient.classList.remove('hidden');
@@ -699,6 +755,18 @@ fabAdd.addEventListener('click', openAddModal);
 btnCloseModalClient.addEventListener('click', closeModalClient);
 btnCancelModalClient.addEventListener('click', closeModalClient);
 
+if (btnToggleNfseWebPass && inputNfsePassword) {
+  btnToggleNfseWebPass.addEventListener('click', () => {
+    if (inputNfsePassword.type === 'password') {
+      inputNfsePassword.type = 'text';
+      btnToggleNfseWebPass.textContent = '🔒';
+    } else {
+      inputNfsePassword.type = 'password';
+      btnToggleNfseWebPass.textContent = '👁️';
+    }
+  });
+}
+
 inputCnpj.addEventListener('input', (e) => {
   e.target.value = formatCnpj(e.target.value);
   const clean = cleanDigits(e.target.value);
@@ -706,6 +774,12 @@ inputCnpj.addEventListener('input', (e) => {
     fetchBrasilApiCnpj(clean);
   }
 });
+
+if (inputCpf) {
+  inputCpf.addEventListener('input', (e) => {
+    e.target.value = formatCpf(e.target.value);
+  });
+}
 
 btnBuscarBrasilApi.addEventListener('click', () => {
   const clean = cleanDigits(inputCnpj.value);
@@ -729,6 +803,9 @@ formClient.addEventListener('submit', (e) => {
   const razao = inputRazao.value.trim();
   const phone = cleanDigits(inputPhone.value);
   const notes = inputNotes.value.trim();
+  const nfsePassword = inputNfsePassword ? inputNfsePassword.value.trim() : '';
+  const cpf = inputCpf ? cleanDigits(inputCpf.value) : '';
+  const nfseService = inputNfseService ? inputNfseService.value.trim() : '';
 
   if (cnpjClean.length !== 14) {
     alert('CNPJ inválido. Precisa ter exatamente 14 dígitos.');
@@ -741,7 +818,6 @@ formClient.addEventListener('submit', (e) => {
   }
 
   if (id) {
-    // Editar
     const index = appData.clients.findIndex((c) => String(c.id) === String(id));
     if (index !== -1) {
       appData.clients[index] = {
@@ -750,12 +826,14 @@ formClient.addEventListener('submit', (e) => {
         name,
         razao: razao || name,
         phone,
-        notes
+        notes,
+        nfsePassword,
+        cpf,
+        nfseService
       };
       showToast('✓ MEI atualizado com sucesso!');
     }
   } else {
-    // Novo
     const exists = appData.clients.some((c) => c.cnpj === cnpjClean);
     if (exists && !confirm('Este CNPJ já está cadastrado. Deseja adicionar mesmo assim?')) {
       return;
@@ -768,6 +846,9 @@ formClient.addEventListener('submit', (e) => {
       razao: razao || name,
       phone,
       notes,
+      nfsePassword,
+      cpf,
+      nfseService,
       createdAt: new Date().toISOString()
     });
     showToast('✓ MEI cadastrado com sucesso!');
@@ -820,7 +901,6 @@ function closeGuideModal() {
 btnCloseModalGuide.addEventListener('click', closeGuideModal);
 btnCancelModalGuide.addEventListener('click', closeGuideModal);
 
-// Upload e Seleção de Arquivo
 fileUploadBox.addEventListener('click', (e) => {
   if (e.target.closest('.file-attached-actions')) return;
   inputGuideFile.click();
@@ -860,7 +940,6 @@ btnViewAttachedFile.addEventListener('click', async (e) => {
   }
 });
 
-// Botões para colar Pix e Código de Barras
 btnPastePix.addEventListener('click', async () => {
   try {
     const text = await navigator.clipboard.readText();
@@ -962,10 +1041,8 @@ inputImportJson.addEventListener('change', (e) => {
       let importedHistory = {};
 
       if (Array.isArray(imported)) {
-        // Formato exportado da extensão
         importedList = imported;
       } else if (imported && typeof imported === 'object') {
-        // Formato exportado do Web App
         importedList = imported.clients || [];
         importedHistory = imported.history || {};
       }
@@ -981,13 +1058,15 @@ inputImportJson.addEventListener('change', (e) => {
             razao: item.razao || item.name || '',
             phone: cleanDigits(item.phone || ''),
             notes: item.notes || '',
+            nfsePassword: item.nfsePassword || '',
+            cpf: cleanDigits(item.cpf || ''),
+            nfseService: item.nfseService || '',
             createdAt: item.createdAt || new Date().toISOString()
           });
           added++;
         }
       });
 
-      // Mescla histórico
       Object.keys(importedHistory).forEach((mKey) => {
         if (!appData.history[mKey]) appData.history[mKey] = {};
         Object.assign(appData.history[mKey], importedHistory[mKey]);

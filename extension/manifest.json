@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Facilita MEI - Preenchimento Rápido PGMEI",
-  "version": "1.0.0",
-  "description": "Salva seus CNPJs de MEI e preenche automaticamente com 1 clique na tela de emissão do PGMEI da Receita Federal.",
+  "name": "Facilita MEI - Emissor PGMEI & NFS-e Nacional",
+  "version": "1.1.0",
+  "description": "Preenchimento rápido do CNPJ no PGMEI e login automático com 1 clique no Portal da NFS-e Nacional da Receita Federal.",
   "permissions": [
     "storage"
   ],
   "host_permissions": [
     "https://www8.receita.fazenda.gov.br/*",
+    "https://www.nfse.gov.br/*",
     "https://brasilapi.com.br/*"
   ],
   "action": {
@@ -29,7 +30,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes/atspo/pgmei.app/*"
+        "https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes/atspo/pgmei.app/*",
+        "https://www.nfse.gov.br/*"
       ],
       "js": ["content.js"],
       "css": ["content.css"],

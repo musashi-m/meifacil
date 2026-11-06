@@ -1,8 +1,8 @@
-# 🚀 Facilita MEI - Emissor Rápido de Guias DAS
+# 🚀 Facilita MEI - Emissor Rápido de Guias DAS & Central NFS-e Nacional
 
-Solução completa desenvolvida para facilitar a rotina de emissão de guias do MEI (DAS):
-1. **Extensão para Navegador (Chrome / Edge / Brave)**: Preenche o CNPJ com 1 clique direto no site oficial do PGMEI da Receita Federal.
-2. **Web App / PWA (Celular e PC)**: Painel completo para acompanhar o mês, copiar CNPJ, disparar mensagem de WhatsApp para o cliente e gerenciar o histórico.
+Solução completa desenvolvida para facilitar a rotina de emissão de guias do MEI (DAS) e emissão de notas no Portal da NFS-e Nacional da Receita Federal:
+1. **Extensão para Navegador (Chrome / Edge / Brave)**: Preenche o CNPJ com 1 clique direto no site oficial do PGMEI e preenche login/senha automaticamente no **Portal da NFS-e Nacional (`nfse.gov.br`)**.
+2. **Web App / PWA (Celular e PC)**: Painel completo para acompanhar o mês, copiar CNPJ, guardar senhas da NFS-e de forma segura, disparar mensagem de WhatsApp para o cliente com PDF anexado, Pix e Código de Barras.
 
 ---
 

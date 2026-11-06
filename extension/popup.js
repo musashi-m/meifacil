@@ -1,6 +1,7 @@
 // Facilita MEI - Popup Logic
 
 const PGMEI_URL = 'https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes/atspo/pgmei.app/identificacao';
+const NFSE_URL = 'https://www.nfse.gov.br/EmissorNacional/Login';
 
 // Estado local
 let clients = [];
@@ -13,6 +14,7 @@ const clientsCountEl = document.getElementById('clientsCount');
 const searchInput = document.getElementById('searchInput');
 const toastEl = document.getElementById('toast');
 const btnOpenPgmei = document.getElementById('btnOpenPgmei');
+const btnOpenNfse = document.getElementById('btnOpenNfse');
 
 // Formulário de Cadastro
 const form = document.getElementById('addClientForm');
@@ -20,6 +22,9 @@ const newCnpjInput = document.getElementById('newCnpj');
 const newNameInput = document.getElementById('newName');
 const newRazaoInput = document.getElementById('newRazao');
 const newPhoneInput = document.getElementById('newPhone');
+const newNfsePasswordInput = document.getElementById('newNfsePassword');
+const newCpfInput = document.getElementById('newCpf');
+const btnToggleNfsePass = document.getElementById('btnToggleNfsePass');
 const cnpjStatus = document.getElementById('cnpjStatus');
 const btnConsultarCnpj = document.getElementById('btnConsultarCnpj');
 
@@ -39,6 +44,14 @@ function formatCnpj(val) {
   if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
   if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
   return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
+}
+
+function formatCpf(val) {
+  const digits = cleanDigits(val).slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
 }
 
 function formatPhone(val) {
@@ -123,6 +136,7 @@ function renderClients(filterText = '') {
     card.className = 'client-card';
 
     const formattedCnpj = formatCnpj(client.cnpj);
+    const hasNfsePass = Boolean(client.nfsePassword);
 
     card.innerHTML = `
       <div class="client-header">
@@ -132,23 +146,31 @@ function renderClients(filterText = '') {
         </div>
         <span class="client-cnpj-badge">${formattedCnpj}</span>
       </div>
+
       <div class="client-actions">
-        <button class="btn-action-copy" data-cnpj="${client.cnpj}">
+        <button class="btn-action-copy" data-action="copy-cnpj" title="Copiar CNPJ">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
           </svg>
-          Copiar CNPJ
+          CNPJ
         </button>
-        <button class="btn-action-open" data-cnpj="${client.cnpj}" title="Copiar e abrir o PGMEI direto">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <line x1="10" y1="14" x2="21" y2="3"></line>
-          </svg>
-          Abrir
+
+        <button class="btn-action-open" data-action="open-pgmei" title="Copiar e abrir o PGMEI">
+          PGMEI
         </button>
-        <button class="btn-action-delete" data-id="${client.id}" title="Excluir">
+
+        <button class="btn-action-open" data-action="open-nfse" style="background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8;" title="Abrir Emissor da NFS-e Nacional">
+          NFS-e
+        </button>
+
+        ${hasNfsePass ? `
+          <button class="btn-action-open" data-action="copy-nfse-pass" title="Copiar senha da NFS-e" style="padding: 6px 8px;">
+            🔑 Senha
+          </button>
+        ` : ''}
+
+        <button class="btn-action-delete" data-action="delete" title="Excluir">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="3 6 5 6 21 6"></polyline>
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -157,8 +179,8 @@ function renderClients(filterText = '') {
       </div>
     `;
 
-    // Evento Copiar
-    card.querySelector('.btn-action-copy').addEventListener('click', (e) => {
+    // Evento Copiar CNPJ
+    card.querySelector('[data-action="copy-cnpj"]').addEventListener('click', (e) => {
       e.stopPropagation();
       navigator.clipboard.writeText(client.cnpj).then(() => {
         showToast('✓ CNPJ copiado para a área de transferência!');
@@ -166,7 +188,7 @@ function renderClients(filterText = '') {
     });
 
     // Evento Abrir PGMEI + Copiar
-    card.querySelector('.btn-action-open').addEventListener('click', (e) => {
+    card.querySelector('[data-action="open-pgmei"]').addEventListener('click', (e) => {
       e.stopPropagation();
       navigator.clipboard.writeText(client.cnpj).then(() => {
         showToast('✓ CNPJ copiado! Abrindo PGMEI...');
@@ -174,8 +196,30 @@ function renderClients(filterText = '') {
       });
     });
 
+    // Evento Abrir NFS-e
+    card.querySelector('[data-action="open-nfse"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Copia a senha ou o CNPJ
+      const toCopy = client.nfsePassword || client.cnpj;
+      navigator.clipboard.writeText(toCopy).then(() => {
+        showToast(client.nfsePassword ? '✓ Senha NFS-e copiada! Abrindo portal...' : '✓ CNPJ copiado! Abrindo NFS-e...');
+        chrome.tabs.create({ url: NFSE_URL });
+      });
+    });
+
+    // Copiar Senha NFS-e
+    const btnPass = card.querySelector('[data-action="copy-nfse-pass"]');
+    if (btnPass) {
+      btnPass.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(client.nfsePassword).then(() => {
+          showToast('✓ Senha da NFS-e copiada!');
+        });
+      });
+    }
+
     // Evento Deletar
-    card.querySelector('.btn-action-delete').addEventListener('click', (e) => {
+    card.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
       e.stopPropagation();
       if (confirm(`Deseja remover o MEI "${client.name}"?`)) {
         clients = clients.filter((c) => c.id !== client.id);
@@ -210,7 +254,6 @@ async function fetchCnpjInfo(cnpjDigits) {
     if (data.razao_social) {
       newRazaoInput.value = data.razao_social;
       if (!newNameInput.value) {
-        // Se tiver nome fantasia, usa como apelido. Senão, primeiro nome ou razão.
         newNameInput.value = data.nome_fantasia || data.razao_social;
       }
       cnpjStatus.textContent = `✓ Encontrado: ${data.razao_social} (${data.descricao_situacao_cadastral || 'Ativa'})`;
@@ -220,6 +263,19 @@ async function fetchCnpjInfo(cnpjDigits) {
     cnpjStatus.textContent = 'CNPJ não encontrado na consulta automática. Você pode preencher os dados manualmente.';
     cnpjStatus.className = 'field-hint error';
   }
+}
+
+// Alternar visualização da senha
+if (btnToggleNfsePass) {
+  btnToggleNfsePass.addEventListener('click', () => {
+    if (newNfsePasswordInput.type === 'password') {
+      newNfsePasswordInput.type = 'text';
+      btnToggleNfsePass.textContent = '🔒';
+    } else {
+      newNfsePasswordInput.type = 'password';
+      btnToggleNfsePass.textContent = '👁️';
+    }
+  });
 }
 
 // Máscaras de entrada
@@ -247,6 +303,12 @@ newPhoneInput.addEventListener('input', (e) => {
   e.target.value = formatPhone(e.target.value);
 });
 
+if (newCpfInput) {
+  newCpfInput.addEventListener('input', (e) => {
+    e.target.value = formatCpf(e.target.value);
+  });
+}
+
 // Salvar Novo MEI
 form.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -255,6 +317,8 @@ form.addEventListener('submit', (e) => {
   const name = newNameInput.value.trim();
   const razao = newRazaoInput.value.trim();
   const phone = cleanDigits(newPhoneInput.value);
+  const nfsePassword = newNfsePasswordInput ? newNfsePasswordInput.value.trim() : '';
+  const cpf = newCpfInput ? cleanDigits(newCpfInput.value) : '';
 
   if (cleanCnpj.length !== 14) {
     alert('O CNPJ deve ter exatamente 14 dígitos.');
@@ -266,7 +330,6 @@ form.addEventListener('submit', (e) => {
     return;
   }
 
-  // Verifica se já existe
   const exists = clients.some((c) => c.cnpj === cleanCnpj);
   if (exists) {
     if (!confirm('Este CNPJ já está cadastrado. Deseja cadastrar/atualizar mesmo assim?')) {
@@ -280,6 +343,8 @@ form.addEventListener('submit', (e) => {
     name,
     razao: razao || name,
     phone: phone || '',
+    nfsePassword: nfsePassword || '',
+    cpf: cpf || '',
     createdAt: new Date().toISOString()
   };
 
@@ -298,10 +363,16 @@ searchInput.addEventListener('input', (e) => {
   renderClients(e.target.value);
 });
 
-// Botão direto para o PGMEI
+// Botões diretos para portais
 btnOpenPgmei.addEventListener('click', () => {
   chrome.tabs.create({ url: PGMEI_URL });
 });
+
+if (btnOpenNfse) {
+  btnOpenNfse.addEventListener('click', () => {
+    chrome.tabs.create({ url: NFSE_URL });
+  });
+}
 
 // --- Exportar & Importar Backup ---
 btnExportData.addEventListener('click', () => {
@@ -321,13 +392,10 @@ fileImport.addEventListener('change', (e) => {
   reader.onload = (evt) => {
     try {
       const imported = JSON.parse(evt.target.result);
-      if (!Array.isArray(imported)) {
-        throw new Error('Formato inválido. O arquivo deve conter uma lista de MEIs.');
-      }
+      const list = Array.isArray(imported) ? imported : (imported.clients || []);
 
-      // Mescla com existentes sem duplicar CNPJs
       let addedCount = 0;
-      imported.forEach((item) => {
+      list.forEach((item) => {
         const cleanCnpj = cleanDigits(item.cnpj);
         if (cleanCnpj.length === 14 && !clients.some((c) => c.cnpj === cleanCnpj)) {
           clients.push({
@@ -336,6 +404,8 @@ fileImport.addEventListener('change', (e) => {
             name: item.name || 'Cliente Importado',
             razao: item.razao || item.name || '',
             phone: cleanDigits(item.phone || ''),
+            nfsePassword: item.nfsePassword || '',
+            cpf: cleanDigits(item.cpf || ''),
             createdAt: item.createdAt || new Date().toISOString()
           });
           addedCount++;
@@ -356,4 +426,3 @@ fileImport.addEventListener('change', (e) => {
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', loadData);
-

@@ -1,17 +1,27 @@
-// Facilita MEI - Content Script para PGMEI da Receita Federal
+// Facilita MEI - Content Script para PGMEI e Portal NFS-e Nacional
 
 (function () {
   'use strict';
 
+  const isNfseSite = window.location.hostname.includes('nfse.gov.br');
+  const isPgmeiSite = window.location.hostname.includes('receita.fazenda.gov.br') && window.location.pathname.includes('pgmei');
+
   // Helper para formatar CNPJ (14 dígitos -> 00.000.000/0000-00)
   function formatCnpj(cnpj) {
-    const raw = String(cnpj).replace(/\D/g, '');
+    const raw = String(cnpj || '').replace(/\D/g, '');
     if (raw.length !== 14) return cnpj;
     return raw.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   }
 
-  // Localiza o campo de CNPJ na tela da Receita
-  function findCnpjInput() {
+  // Helper para formatar CPF (11 dígitos -> 000.000.000-00)
+  function formatCpf(cpf) {
+    const raw = String(cpf || '').replace(/\D/g, '');
+    if (raw.length !== 11) return cpf;
+    return raw.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+  }
+
+  // Localiza o campo de CNPJ no PGMEI
+  function findPgmeiCnpjInput() {
     return (
       document.getElementById('cnpj') ||
       document.querySelector('input[name*="cnpj" i]') ||
@@ -22,16 +32,60 @@
     );
   }
 
-  // Localiza o botão de Continuar/Enviar
-  function findContinueButton() {
+  // Localiza os campos de Login e Senha no Portal da NFS-e Nacional
+  function findNfseInputs() {
+    const userField =
+      document.getElementById('Inscricao') ||
+      document.getElementById('CpfCnpj') ||
+      document.getElementById('cpf') ||
+      document.getElementById('cnpj') ||
+      document.querySelector('input[name*="inscricao" i]') ||
+      document.querySelector('input[name*="cpf" i]') ||
+      document.querySelector('input[name*="cnpj" i]') ||
+      document.querySelector('input[name*="login" i]') ||
+      document.querySelector('input[name*="usuario" i]') ||
+      document.querySelector('form input[type="text"]');
+
+    const passField =
+      document.getElementById('Senha') ||
+      document.getElementById('password') ||
+      document.querySelector('input[name*="senha" i]') ||
+      document.querySelector('input[type="password"]');
+
+    const submitBtn =
+      document.getElementById('btnEntrar') ||
+      document.getElementById('btnAcessar') ||
+      document.querySelector('button[type="submit"]') ||
+      document.querySelector('input[type="submit"]') ||
+      Array.from(document.querySelectorAll('button, a.btn, input[type="button"]')).find((el) => {
+        const txt = (el.textContent || el.value || '').toLowerCase();
+        return txt.includes('entrar') || txt.includes('acessar') || txt.includes('login');
+      });
+
+    return { userField, passField, submitBtn };
+  }
+
+  // Localiza o botão de Continuar no PGMEI
+  function findPgmeiContinueButton() {
     return (
       document.getElementById('btnContinuar') ||
       document.querySelector('button[type="submit"]') ||
       document.querySelector('input[type="submit"]') ||
       Array.from(document.querySelectorAll('button, a.btn, input[type="button"]')).find((el) =>
-        el.textContent.toLowerCase().includes('continuar') || el.value?.toLowerCase().includes('continuar')
+        (el.textContent || el.value || '').toLowerCase().includes('continuar')
       )
     );
+  }
+
+  // Dispara eventos em um input para atualizar listeners JS/Angular/React/jQuery
+  function triggerInputEvents(input, val) {
+    if (!input) return;
+    input.focus();
+    input.value = val;
+    const events = ['input', 'change', 'keydown', 'keypress', 'keyup', 'blur'];
+    events.forEach((evtName) => {
+      input.dispatchEvent(new Event(evtName, { bubbles: true }));
+    });
   }
 
   // Exibe toast temporário de feedback
@@ -49,51 +103,82 @@
       <span>${message}</span>
     `;
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(() => toast.remove(), 3200);
   }
 
-  // Preenche o campo de CNPJ com segurança
-  function fillCnpj(cnpjVal, clientName) {
-    const input = findCnpjInput();
+  // Preenchimento no PGMEI
+  function fillPgmei(client) {
+    const input = findPgmeiCnpjInput();
     if (!input) {
-      alert('Campo de CNPJ não encontrado nesta página. Certifique-se de estar na tela de Identificação do PGMEI.');
+      alert('Campo de CNPJ não encontrado. Certifique-se de estar na tela de Identificação do PGMEI.');
       return;
     }
 
-    const clean = cnpjVal.replace(/\D/g, '');
+    const clean = (client.cnpj || '').replace(/\D/g, '');
     const formatted = formatCnpj(clean);
 
-    input.focus();
-
-    // Testa preencher tanto o valor formatado quanto dispara eventos necessários para masks jQuery/JS
-    input.value = formatted;
-
-    const events = ['input', 'change', 'keydown', 'keypress', 'keyup', 'blur'];
-    events.forEach((evtName) => {
-      input.dispatchEvent(new Event(evtName, { bubbles: true }));
-    });
-
-    // Se o valor estiver vazio por causa de máscara estrita, tenta o valor limpo
+    triggerInputEvents(input, formatted);
     if (!input.value) {
-      input.value = clean;
-      events.forEach((evtName) => {
-        input.dispatchEvent(new Event(evtName, { bubbles: true }));
-      });
+      triggerInputEvents(input, clean);
     }
 
-    // Destaque visual no campo
     input.classList.add('fmei-input-highlight');
-    setTimeout(() => {
-      input.classList.remove('fmei-input-highlight');
-    }, 2000);
+    setTimeout(() => input.classList.remove('fmei-input-highlight'), 2000);
 
-    // Foca o botão Continuar
-    const btn = findContinueButton();
-    if (btn) {
-      btn.focus();
+    const btn = findPgmeiContinueButton();
+    if (btn) btn.focus();
+
+    showToast(`✓ CNPJ de "${client.name}" preenchido!`);
+  }
+
+  // Preenchimento no Portal da NFS-e Nacional
+  function fillNfse(client) {
+    const { userField, passField, submitBtn } = findNfseInputs();
+
+    if (!userField && !passField) {
+      alert('Campos de login da NFS-e Nacional não encontrados nesta página. Acesse a tela de Login do Emissor Nacional.');
+      return;
     }
 
-    showToast(`CNPJ de "${clientName || 'Cliente'}" preenchido com sucesso!`);
+    // Identificação: usa CPF se disponível e pedido, ou CNPJ
+    const userVal = client.cpf || client.cnpj || '';
+    const cleanUser = userVal.replace(/\D/g, '');
+
+    if (userField) {
+      const formattedUser = cleanUser.length === 11 ? formatCpf(cleanUser) : formatCnpj(cleanUser);
+      triggerInputEvents(userField, formattedUser);
+      if (!userField.value) {
+        triggerInputEvents(userField, cleanUser);
+      }
+      userField.classList.add('fmei-input-highlight');
+      setTimeout(() => userField.classList.remove('fmei-input-highlight'), 2000);
+    }
+
+    // Senha Web
+    if (passField && client.nfsePassword) {
+      triggerInputEvents(passField, client.nfsePassword);
+      passField.classList.add('fmei-input-highlight');
+      setTimeout(() => passField.classList.remove('fmei-input-highlight'), 2000);
+    }
+
+    if (submitBtn) {
+      submitBtn.focus();
+    }
+
+    if (client.nfsePassword) {
+      showToast(`✓ Login e Senha NFS-e de "${client.name}" preenchidos!`);
+    } else {
+      showToast(`✓ Usuário de "${client.name}" preenchido! (Sem senha cadastrada)`);
+    }
+  }
+
+  // Preenchimento unificado
+  function handleClientSelect(client) {
+    if (isNfseSite) {
+      fillNfse(client);
+    } else {
+      fillPgmei(client);
+    }
   }
 
   // Renderiza o widget flutuante na página
@@ -106,6 +191,7 @@
     }
 
     const count = clients ? clients.length : 0;
+    const portalName = isNfseSite ? 'NFS-e Nacional' : 'PGMEI';
 
     let itemsHtml = '';
     if (count === 0) {
@@ -124,9 +210,12 @@
             <li class="fmei-item" data-index="${idx}">
               <div class="fmei-item-info">
                 <span class="fmei-item-name">${escapeHtml(c.name || 'Sem nome')}</span>
-                <span class="fmei-item-cnpj">${formatCnpj(c.cnpj)}</span>
+                <span class="fmei-item-cnpj">
+                  ${formatCnpj(c.cnpj)}
+                  ${isNfseSite && c.nfsePassword ? '<span style="color:#059669; font-weight:bold; margin-left:4px;">🔑 Senha salva</span>' : ''}
+                </span>
               </div>
-              <span class="fmei-item-action">Preencher</span>
+              <span class="fmei-item-action">${isNfseSite ? 'Entrar' : 'Preencher'}</span>
             </li>
           `
             )
@@ -141,7 +230,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
           </svg>
-          <span>Facilita MEI</span>
+          <span>Facilita MEI • ${portalName}</span>
           <span class="fmei-badge-count">${count}</span>
         </div>
         <button class="fmei-btn-toggle" title="Minimizar / Expandir">
@@ -152,19 +241,19 @@
       </div>
       <div class="fmei-body">
         <div class="fmei-info">
-          <span>Selecione para preencher:</span>
+          <span>Selecione para preencher ${isNfseSite ? 'login e senha' : 'o CNPJ'}:</span>
         </div>
         ${itemsHtml}
       </div>
     `;
 
-    // Eventos do cabeçalho / minimizar
+    // Minimizar
     const header = widget.querySelector('#fmei-header-btn');
-    header.addEventListener('click', (e) => {
+    header.addEventListener('click', () => {
       widget.classList.toggle('minimized');
     });
 
-    // Eventos dos itens
+    // Clique no item
     const items = widget.querySelectorAll('.fmei-item');
     items.forEach((item) => {
       item.addEventListener('click', (e) => {
@@ -172,14 +261,14 @@
         const index = parseInt(item.getAttribute('data-index'), 10);
         const client = clients[index];
         if (client) {
-          fillCnpj(client.cnpj, client.name);
+          handleClientSelect(client);
         }
       });
     });
   }
 
   function escapeHtml(str) {
-    return String(str)
+    return String(str || '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -205,11 +294,9 @@
     });
   }
 
-  // Inicia quando a página estiver carregada
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', loadClients);
   } else {
     loadClients();
   }
 })();
-

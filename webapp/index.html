@@ -50,13 +50,22 @@
               <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
             </svg>
           </button>
-          <a href="https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes/atspo/pgmei.app/identificacao" target="_blank" rel="noopener" class="btn-pgmei-header">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <a href="https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes/atspo/pgmei.app/identificacao" target="_blank" rel="noopener" class="btn-pgmei-header" title="Abrir portal do PGMEI (DAS)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
               <polyline points="15 3 21 3 21 9"></polyline>
               <line x1="10" y1="14" x2="21" y2="3"></line>
             </svg>
-            <span>Ir ao PGMEI</span>
+            <span>PGMEI</span>
+          </a>
+          <a href="https://www.nfse.gov.br/EmissorNacional/Login" target="_blank" rel="noopener" class="btn-nfse-header" title="Abrir Emissor da NFS-e Nacional">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            <span>NFS-e</span>
           </a>
         </div>
       </div>
@@ -184,6 +193,31 @@
           <div class="form-group">
             <label for="inputNotes">Observações (opcional)</label>
             <input type="text" id="inputNotes" placeholder="Ex: Paga sempre dia 15, enviar por PDF">
+          </div>
+
+          <div style="border-top: 1px dashed var(--border); margin: 6px 0;"></div>
+          <span style="font-size: 12px; font-weight: 700; color: #1d4ed8; display: flex; align-items: center; gap: 4px;">
+            🧾 Acesso ao Portal NFS-e Nacional (Opcional)
+          </span>
+
+          <div class="form-group">
+            <label for="inputNfsePassword">Senha de Acesso NFS-e Nacional</label>
+            <div class="input-inline-btn">
+              <input type="password" id="inputNfsePassword" placeholder="Senha cadastrada no portal da Receita">
+              <button type="button" id="btnToggleNfseWebPass" class="btn-inline-action" title="Ver / Ocultar Senha">👁️</button>
+            </div>
+            <span class="form-helper">Preenche automaticamente no computador e facilita a cópia no celular.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="inputCpf">CPF do Titular (opcional)</label>
+            <input type="text" id="inputCpf" placeholder="000.000.000-00" maxlength="14">
+          </div>
+
+          <div class="form-group">
+            <label for="inputNfseService">Serviço Padrão / Descrição da Nota (opcional)</label>
+            <input type="text" id="inputNfseService" placeholder="Ex: Serviços de barbeiro - Corte de cabelo">
+            <span class="form-helper">Texto pronto para copiar e colar na descrição do serviço da NFS-e.</span>
           </div>
 
           <div class="modal-footer">

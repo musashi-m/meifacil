@@ -5,3 +5,4 @@
     { "source": "/:path*", "destination": "/webapp/:path*" }
   ]
 }
+
