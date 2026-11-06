@@ -1,0 +1,13 @@
+{
+  "name": "facilita-mei",
+  "version": "1.0.0",
+  "description": "Facilita MEI - Extensão e Web App para Emissão Rápida de Guias DAS",
+  "scripts": {
+    "start": "npx serve webapp -l 3000",
+    "dev": "npx serve webapp -l 3000"
+  },
+  "keywords": ["mei", "das", "pgmei", "receita-federal"],
+  "author": "",
+  "license": "MIT"
+}
+

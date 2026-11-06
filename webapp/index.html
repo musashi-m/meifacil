@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Facilita MEI - Gestão & Emissão Rápida de Guias DAS</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#059669">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Facilita MEI">
+  <link rel="apple-touch-icon" href="icon192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon192.png">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="brand">
+          <div class="brand-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
+          <div>
+            <h1>Facilita MEI</h1>
+            <span class="brand-subtitle">Emissor Rápido de Guias DAS</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="btnHeaderAdd" class="btn-header-add" title="Cadastrar Novo MEI">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>+ Novo MEI</span>
+          </button>
+          <button id="btnOpenSyncModal" class="btn-icon" title="Sincronizar & Backup">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="17 1 21 5 17 9"></polyline>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+              <polyline points="7 23 3 19 7 15"></polyline>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+            </svg>
+          </button>
+          <a href="https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes/atspo/pgmei.app/identificacao" target="_blank" rel="noopener" class="btn-pgmei-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            <span>Ir ao PGMEI</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+      <!-- Month Navigator -->
+      <section class="month-selector-card">
+        <button id="btnPrevMonth" class="btn-month-nav" title="Mês Anterior">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <div class="month-display">
+          <span class="month-label">Competência / Mês:</span>
+          <h2 id="currentMonthLabel">Novembro / 2026</h2>
+        </div>
+        <button id="btnNextMonth" class="btn-month-nav" title="Próximo Mês">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </section>
+
+      <!-- Metrics Row -->
+      <section class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-title">Total de MEIs</span>
+          <span class="metric-value" id="metricTotal">0</span>
+        </div>
+        <div class="metric-card metric-card-pending">
+          <span class="metric-title">Guias Pendentes</span>
+          <span class="metric-value" id="metricPending">0</span>
+        </div>
+        <div class="metric-card metric-card-done">
+          <span class="metric-title">Emitidas / Pagas</span>
+          <span class="metric-value" id="metricDone">0</span>
+        </div>
+      </section>
+
+      <!-- Action Toolbar -->
+      <section class="toolbar">
+        <div class="search-input-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="filterSearch" placeholder="Pesquisar por nome, apelido ou CNPJ...">
+        </div>
+
+        <div class="toolbar-actions">
+          <div class="filter-pills">
+            <button class="pill active" data-filter="all">Todos</button>
+            <button class="pill" data-filter="pending">Pendentes</button>
+            <button class="pill" data-filter="emitted">Emitidas</button>
+            <button class="pill" data-filter="paid">Pagas</button>
+          </div>
+
+          <button id="btnOpenAddModal" class="btn-primary-add">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Novo MEI</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- MEI Clients List Grid -->
+      <section id="clientsContainer" class="clients-grid">
+        <!-- Rendered via JS -->
+      </section>
+    </main>
+
+    <!-- Floating Action Button for Mobile -->
+    <button id="fabAdd" class="fab-mobile" title="Cadastrar novo MEI">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span>+ Cadastrar</span>
+    </button>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Modal: Adicionar / Editar MEI -->
+    <div id="modalClient" class="modal-backdrop hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalClientTitle">Cadastrar Novo MEI</h3>
+          <button class="btn-close-modal" id="btnCloseModalClient">&times;</button>
+        </div>
+        <form id="formClient" class="modal-body">
+          <input type="hidden" id="clientId">
+
+          <div class="form-group">
+            <label for="inputCnpj">CNPJ do MEI *</label>
+            <div class="input-inline-btn">
+              <input type="text" id="inputCnpj" placeholder="00.000.000/0000-00" maxlength="18" required>
+              <button type="button" id="btnBuscarBrasilApi" class="btn-inline-action">
+                Consultar
+              </button>
+            </div>
+            <span id="apiStatusText" class="form-helper">Digite os 14 dígitos para buscar os dados na Receita Federal.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="inputName">Apelido / Como você conhece *</label>
+            <input type="text" id="inputName" placeholder="Ex: Barbearia do Pedro, Maria Confeiteira" required>
+          </div>
+
+          <div class="form-group">
+            <label for="inputRazao">Razão Social Oficial</label>
+            <input type="text" id="inputRazao" placeholder="Puxada automaticamente na busca do CNPJ">
+          </div>
+
+          <div class="form-group">
+            <label for="inputPhone">WhatsApp do Cliente (com DDD)</label>
+            <input type="tel" id="inputPhone" placeholder="(11) 99999-9999" maxlength="15">
+            <span class="form-helper">Usado para abrir a conversa com mensagem da guia pronta.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="inputNotes">Observações (opcional)</label>
+            <input type="text" id="inputNotes" placeholder="Ex: Paga sempre dia 15, enviar por PDF">
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" id="btnCancelModalClient">Cancelar</button>
+            <button type="submit" class="btn-save" id="btnSaveModalClient">Salvar MEI</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Sincronização & Backup -->
+    <div id="modalSync" class="modal-backdrop hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Sincronização & Backup</h3>
+          <button class="btn-close-modal" id="btnCloseModalSync">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="sync-desc">
+            Você pode sincronizar facilmente os mesmos MEIs entre a <strong>Extensão de Computador</strong> e este <strong>Web App no Celular</strong> exportando ou importando o arquivo de backup.
+          </p>
+
+          <div class="sync-buttons">
+            <button id="btnExportJson" class="btn-sync-action">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <div>
+                <strong>Exportar Backup (.json)</strong>
+                <span>Baixa um arquivo com todos os seus MEIs e status</span>
+              </div>
+            </button>
+
+            <label for="inputImportJson" class="btn-sync-action">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <div>
+                <strong>Importar Backup (.json)</strong>
+                <span>Carrega o arquivo exportado da Extensão ou de outro celular</span>
+              </div>
+              <input type="file" id="inputImportJson" accept=".json" style="display: none;">
+            </label>
+          </div>
+
+          <div class="pwa-install-tip">
+            <strong>Dica para o Celular:</strong>
+            <p>No Chrome ou Safari, toque em <em>"Adicionar à tela de início"</em> ou <em>"Instalar aplicativo"</em> para ter o Facilita MEI como um app nativo no celular!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Dados da Guia (PDF, Pix e Código de Barras) -->
+    <div id="modalGuide" class="modal-backdrop hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h3 id="modalGuideTitle">Dados da Guia (DAS)</h3>
+            <span id="modalGuideSubtitle" style="font-size: 11px; color: var(--text-muted);">Competência</span>
+          </div>
+          <button class="btn-close-modal" id="btnCloseModalGuide">&times;</button>
+        </div>
+        <form id="formGuide" class="modal-body">
+          <input type="hidden" id="guideClientCnpj">
+
+          <!-- Upload PDF -->
+          <div class="form-group">
+            <label>Anexar Boleto / Guia (PDF ou Imagem)</label>
+            <div id="fileUploadBox" class="file-drop-area">
+              <input type="file" id="inputGuideFile" accept=".pdf,image/*" style="display: none;">
+              <div id="fileUploadPrompt" class="file-upload-prompt">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                <span>Toque para selecionar o PDF baixado</span>
+              </div>
+              <div id="fileAttachedInfo" class="file-attached-info hidden">
+                <div class="file-attached-details">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                  <span id="attachedFileName" class="attached-file-name">guia.pdf</span>
+                </div>
+                <div class="file-attached-actions">
+                  <button type="button" id="btnViewAttachedFile" class="btn-file-sub" title="Visualizar / Baixar">Abrir</button>
+                  <button type="button" id="btnRemoveAttachedFile" class="btn-file-sub delete" title="Remover anexo">Remover</button>
+                </div>
+              </div>
+            </div>
+            <span class="form-helper">No celular, ao enviar pelo WhatsApp, o arquivo PDF já é anexado automaticamente!</span>
+          </div>
+
+          <!-- Pix Copia e Cola -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="inputGuidePix">Pix Copia e Cola (opcional)</label>
+              <button type="button" id="btnPastePix" class="btn-paste-helper">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                Colar
+              </button>
+            </div>
+            <textarea id="inputGuidePix" rows="2" placeholder="Cole o código do Pix Copia e Cola do DAS aqui..."></textarea>
+          </div>
+
+          <!-- Código de Barras -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="inputGuideBarcode">Código de Barras / Linha Digitável (opcional)</label>
+              <button type="button" id="btnPasteBarcode" class="btn-paste-helper">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                Colar
+              </button>
+            </div>
+            <input type="text" id="inputGuideBarcode" placeholder="Ex: 85800000001...">
+          </div>
+
+          <div class="modal-footer" style="margin-top: 6px;">
+            <button type="button" class="btn-cancel" id="btnCancelModalGuide">Cancelar</button>
+            <button type="submit" class="btn-save" id="btnSaveGuide">Salvar Dados</button>
+            <button type="button" class="btn-save-and-send" id="btnSaveAndSendGuide">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+              Salvar & Enviar WhatsApp
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

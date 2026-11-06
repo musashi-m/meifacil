@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facilita MEI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div>
+          <h1>Facilita MEI</h1>
+          <p>Emissor rápido de guias DAS</p>
+        </div>
+      </div>
+      <button id="btnOpenPgmei" class="btn-pgmei-direct" title="Abrir página oficial do PGMEI">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        PGMEI
+      </button>
+    </header>
+
+    <!-- Nav Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-list">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+        Salvos (<span id="clientsCount">0</span>)
+      </button>
+      <button class="nav-tab" data-tab="tab-add">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Cadastrar
+      </button>
+      <button class="nav-tab" data-tab="tab-sync">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="17 1 21 5 17 9"></polyline>
+          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+          <polyline points="7 23 3 19 7 15"></polyline>
+          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+        </svg>
+        Sincronizar
+      </button>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Tab 1: List -->
+    <div id="tab-list" class="tab-content active">
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Pesquisar por nome ou CNPJ...">
+      </div>
+
+      <div id="clientsList" class="clients-list">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Tab 2: Add New -->
+    <div id="tab-add" class="tab-content">
+      <form id="addClientForm" class="form-container">
+        <div class="form-group">
+          <label for="newCnpj">CNPJ do MEI *</label>
+          <div class="input-with-button">
+            <input type="text" id="newCnpj" placeholder="00.000.000/0000-00" maxlength="18" required autofocus>
+            <button type="button" id="btnConsultarCnpj" class="btn-secondary" title="Consultar dados na Receita (BrasilAPI)">
+              Buscar
+            </button>
+          </div>
+          <span id="cnpjStatus" class="field-hint">Digite os 14 dígitos do CNPJ para buscar automaticamente.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="newName">Apelido / Nome do Cliente *</label>
+          <input type="text" id="newName" placeholder="Ex: Oficina do Pedro" required>
+        </div>
+
+        <div class="form-group">
+          <label for="newRazao">Razão Social Oficial (opcional)</label>
+          <input type="text" id="newRazao" placeholder="Puxado automaticamente pela busca">
+        </div>
+
+        <div class="form-group">
+          <label for="newPhone">WhatsApp do Cliente (opcional)</label>
+          <input type="tel" id="newPhone" placeholder="(11) 99999-9999" maxlength="15">
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="btnSaveClient">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Salvar MEI
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tab 3: Sync & Backup -->
+    <div id="tab-sync" class="tab-content">
+      <div class="sync-card">
+        <h3>Sincronizar com o Web App</h3>
+        <p>Você pode exportar a lista de CNPJs cadastrados aqui e importar no Web App no seu celular (ou vice-versa).</p>
+
+        <div class="sync-actions">
+          <button id="btnExportData" class="btn-secondary-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Exportar Backup (.json)
+          </button>
+
+          <label for="fileImport" class="btn-secondary-full file-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Importar Backup do Web App
+            <input type="file" id="fileImport" accept=".json" style="display: none;">
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+

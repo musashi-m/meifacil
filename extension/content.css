@@ -1,0 +1,199 @@
+/* Facilita MEI - Content Script Styles */
+#facilita-mei-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#facilita-mei-widget.minimized {
+  width: auto;
+  border-radius: 30px;
+}
+
+#facilita-mei-widget.minimized .fmei-body {
+  display: none;
+}
+
+.fmei-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.fmei-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.fmei-header-title svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fmei-badge-count {
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.fmei-btn-toggle {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+}
+
+.fmei-btn-toggle:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.fmei-body {
+  padding: 14px;
+  max-height: 380px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.fmei-info {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fmei-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fmei-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fmei-item:hover {
+  border-color: #10b981;
+  background: #f0fdf4;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);
+}
+
+.fmei-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.fmei-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.fmei-item-cnpj {
+  font-size: 11px;
+  color: #64748b;
+  font-family: monospace;
+}
+
+.fmei-item-action {
+  background: #10b981;
+  color: white;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.fmei-empty {
+  text-align: center;
+  padding: 20px 10px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.fmei-empty p {
+  margin: 0 0 10px 0;
+}
+
+.fmei-feedback-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000000;
+  background: #047857;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(4, 120, 87, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fmeiFadeIn 0.3s ease, fmeiFadeOut 0.3s ease 2.7s forwards;
+}
+
+@keyframes fmeiFadeIn {
+  from { opacity: 0; transform: translate(-50%, -15px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes fmeiFadeOut {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -15px); }
+}
+
+.fmei-input-highlight {
+  outline: 3px solid #10b981 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5) !important;
+  transition: all 0.3s ease !important;
+}
+
